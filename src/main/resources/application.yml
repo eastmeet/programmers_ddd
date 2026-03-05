@@ -1,5 +1,6 @@
 server:
-  port: 18080
+  port: ${APP_PORT:8080}
+
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -13,9 +14,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+    doc-expansion: none
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
+  cache:
+    disabled: true

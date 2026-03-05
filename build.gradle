@@ -25,6 +25,10 @@ dependencies {
 
     // lombok
     implementation 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // api-docs
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
 
     // DB
     runtimeOnly 'org.postgresql:postgresql'
