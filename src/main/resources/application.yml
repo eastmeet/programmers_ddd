@@ -1,5 +1,6 @@
 server:
-  port: 18080
+  port: ${APP_PORT}
+
 spring:
   config:
     import: optional:file:.env[.properties]
@@ -13,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
