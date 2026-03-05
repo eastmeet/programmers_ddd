@@ -1,4 +1,4 @@
-package eastmeet.backend5.product.dto;
+package eastmeet.backend5.product.dto.in;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;

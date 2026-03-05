@@ -1,8 +1,9 @@
-package eastmeet.backend5.product.controller;
+package eastmeet.backend5.product.adapter.in.web;
 
 import eastmeet.backend5.product.domain.Product;
-import eastmeet.backend5.product.dto.ProductCreateRequest;
-import eastmeet.backend5.product.dto.ProductUpdateRequest;
+import eastmeet.backend5.product.dto.in.ProductCreateRequest;
+import eastmeet.backend5.product.dto.in.ProductUpdateRequest;
+import eastmeet.backend5.product.dto.out.ProductResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -30,7 +31,7 @@ public interface ProductController {
         @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping
-    ResponseEntity<Product> create(@RequestBody ProductCreateRequest request);
+    ResponseEntity<ProductResponse> create(@RequestBody ProductCreateRequest request);
 
     @Operation(summary = "[제품 관리] 단건 조회")
     @ApiResponses({
@@ -38,14 +39,14 @@ public interface ProductController {
         @ApiResponse(responseCode = "404", description = "제품 없음")
     })
     @GetMapping("/{productId}")
-    Product getById(@PathVariable UUID productId);
+    ProductResponse getById(@PathVariable UUID productId);
 
     @Operation(summary = "[제품 관리] 전체 조회")
     @ApiResponses(
         @ApiResponse(responseCode = "200", description = "조회 성공")
     )
     @GetMapping
-    List<Product> getAll();
+    List<ProductResponse> getAll();
 
     @Operation(summary = "[제품 관리] 단건 수정")
     @ApiResponses({
@@ -54,7 +55,7 @@ public interface ProductController {
         @ApiResponse(responseCode = "404", description = "제품 없음")
     })
     @PutMapping("/{productId}")
-    Product update(@PathVariable UUID productId, @RequestBody ProductUpdateRequest request);
+    ProductResponse update(@PathVariable UUID productId, @RequestBody ProductUpdateRequest request);
 
     @Operation(summary = "[제품 관리] 단건 삭제")
     @ApiResponses({

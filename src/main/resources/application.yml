@@ -22,7 +22,10 @@ spring:
     show-sql: true
 
 springdoc:
+  api-docs:
+    enabled: true
   swagger-ui:
+    enabled: true
     tags-sorter: alpha
     doc-expansion: none
   default-consumes-media-type: application/json;charset=UTF-8

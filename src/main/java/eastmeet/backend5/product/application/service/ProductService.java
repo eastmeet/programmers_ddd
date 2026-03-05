@@ -1,9 +1,11 @@
-package eastmeet.backend5.product.service;
+package eastmeet.backend5.product.application.service;
 
+import eastmeet.backend5.product.application.port.in.ProductUseCase;
+import eastmeet.backend5.product.application.port.out.ProductPersistencePort;
 import eastmeet.backend5.product.domain.Product;
-import eastmeet.backend5.product.dto.ProductCreateRequest;
-import eastmeet.backend5.product.dto.ProductUpdateRequest;
-import eastmeet.backend5.product.repository.ProductRepository;
+import eastmeet.backend5.product.dto.in.ProductCreateRequest;
+import eastmeet.backend5.product.dto.in.ProductUpdateRequest;
+import eastmeet.backend5.product.dto.out.ProductResponse;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService {
+public class ProductService implements ProductUseCase {
 
-    private final ProductRepository productRepository;
+    private final ProductPersistencePort productPersistencePort;
 
     @Override
     @Transactional
-    public Product create(ProductCreateRequest req) {
+    public ProductResponse create(ProductCreateRequest req) {
         Product product = Product.create(
             toUuid(req.sellerId(), "sellerId"),
             req.name(),
@@ -33,23 +35,25 @@ public class ProductServiceImpl implements ProductService {
             req.status(),
             toUuid(req.creatorId(), "creatorId")
         );
-        return productRepository.save(product);
+        Product savedProduct = productPersistencePort.save(product);
+        return ProductResponse.of(savedProduct);
     }
 
     @Override
-    public Product getById(UUID productId) {
+    public ProductResponse getById(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        return product;
+        return ProductResponse.of(product);
     }
 
     @Override
-    public List<Product> getAll() {
-        return productRepository.findAll();
+    public List<ProductResponse> getAll() {
+        List<Product> productList = productPersistencePort.findAll();
+        return productList.stream().map(ProductResponse::of).toList();
     }
 
     @Override
     @Transactional
-    public Product update(UUID productId, ProductUpdateRequest req) {
+    public ProductResponse update(UUID productId, ProductUpdateRequest req) {
         Product product = findByIdOrThrow(productId);
         product.update(
             req.name(),
@@ -59,18 +63,18 @@ public class ProductServiceImpl implements ProductService {
             req.status(),
             toUuid(req.modifierId(), "modifierId")
         );
-        return product;
+        return ProductResponse.of(product);
     }
 
     @Override
     @Transactional
     public void delete(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        productRepository.delete(product);
+        productPersistencePort.delete(product);
     }
 
     private Product findByIdOrThrow(UUID productId) {
-        return productRepository.findById(productId)
+        return productPersistencePort.findById(productId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
     }
 
