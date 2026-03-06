@@ -1,5 +1,8 @@
 package eastmeet.backend5.common.exception;
 
+import eastmeet.backend5.member.application.exception.MemberEmailDuplicateException;
+import eastmeet.backend5.member.application.exception.MemberNotFoundException;
+import eastmeet.backend5.member.application.exception.MemberPhoneDuplicateException;
 import eastmeet.backend5.product.application.exception.InactiveSellerException;
 import eastmeet.backend5.product.application.exception.ProductNotFoundException;
 import eastmeet.backend5.product.application.exception.SellerNotFoundException;
@@ -17,6 +20,24 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMemberNotFound(MemberNotFoundException ex,
+        HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(MemberEmailDuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleMemberEmailExist(MemberEmailDuplicateException ex,
+        HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(MemberPhoneDuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleMemberPhoneExist(MemberPhoneDuplicateException ex,
+        HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleProductNotFound(ProductNotFoundException ex,
