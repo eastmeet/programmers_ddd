@@ -1,6 +1,6 @@
-# Event-Driven CQRS
+# Event-Driven
 
-기존 Command/Query 코드 분리 방식에서, **이벤트 발행(Event Publishing)** 을 통한 CQRS로 전환한 내용을 정리한다.
+기존 Command/Query 코드 분리 방식에서, **이벤트 발행(Event Publishing)** 으로 전환한 내용을 정리한다.
 
 ---
 
@@ -126,48 +126,223 @@ public class ProductEventHandler {
 
 ---
 
-## @TransactionalEventListener 와 @EventListener의 차이
+## @EventListener vs @TransactionalEventListener 실행 시점 비교
 
-이벤트 핸들러에 `@TransactionalEventListener(phase = AFTER_COMMIT)`을 사용한 것이 핵심이다.
+두 어노테이션을 동시에 등록해서 실제 실행 순서를 로그로 확인할 수 있다.
 
-### @EventListener (일반 이벤트)
+```java
+@Async("eventExecutor")
+@EventListener                                               // 즉시 실행
+public void on(ProductCreatedEvent event) {
+    log.info("ProductCreatedEvent: productId={}", event.productId());
+}
 
-```
-트랜잭션 시작
-    │
-    ├── productRepository.save(product)
-    │
-    ├── publishEvent() ──> handle() 즉시 실행  ← 트랜잭션 도중에 실행
-    │
-트랜잭션 커밋 or 롤백
-```
-
-**문제**: `save()`는 성공했지만 이후 코드에서 예외가 발생해 **롤백되어도 핸들러는 이미 실행됐다**.
-핸들러가 외부 API 호출이나 알림을 보냈다면 취소할 수 없다.
-
-### @TransactionalEventListener(phase = AFTER_COMMIT)
-
-```
-트랜잭션 시작
-    │
-    ├── productRepository.save(product)
-    │
-    ├── publishEvent() ──> 이벤트를 큐에 보류만 함 (실행 안 함)
-    │
-트랜잭션 커밋 ──> handle() 실행  ← DB 반영이 확정된 후에만 실행
-    또는
-트랜잭션 롤백 ──> handle() 실행 안 함  ← 롤백되면 이벤트도 취소
+@Async("eventExecutor")
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // 커밋 후 실행
+public void handle(ProductCreatedEvent event) {
+    log.info("ProductCreatedEvent: productId={}", event.productId());
+}
 ```
 
-**DB에 실제로 저장이 확정된 이후에만** 핸들러가 실행된다.
-롤백 시 이벤트 처리가 실행되지 않으므로 데이터 정합성이 보장된다.
+### 실제 로그 출력 결과
 
-| 속성 | @EventListener | @TransactionalEventListener(AFTER_COMMIT) |
+```
+[event-1] ProductCreatedEvent: productId=4329c0cb...   ← @EventListener (on)
+Hibernate: insert into public.product (...)            ← 실제 DB INSERT
+[event-2] ProductCreatedEvent: productId=4329c0cb...   ← @TransactionalEventListener (handle)
+```
+
+`event-1`이 Hibernate INSERT보다 **먼저** 출력됐다.
+`event-2`는 INSERT가 완료된 **이후** 출력됐다.
+
+### 실행 흐름 비교
+
+```
+@Transactional create() 시작
+       │
+       ├── Product.create()
+       │
+       ├── productRepository.save()       ← 아직 INSERT 안 됨 (flush 전)
+       │
+       ├── publishEvent()
+       │      ├── @EventListener     → 즉시 별도 스레드(event-1)로 실행  ← INSERT보다 먼저!
+       │      └── @TransactionalEventListener → 커밋 후로 보류
+       │
+       ├── 트랜잭션 flush → Hibernate: INSERT 실행
+       │
+       └── 커밋 완료
+              └── @TransactionalEventListener → 별도 스레드(event-2)로 실행
+```
+
+### @EventListener에서 DB 조회하면?
+
+`@EventListener`는 아직 INSERT가 실행되기 전에 실행되므로, 핸들러에서 DB를 조회하면 방금 저장한 데이터가 보이지 않는다.
+
+```java
+@Async("eventExecutor")
+@EventListener
+public void on(ProductCreatedEvent event) {
+    // ⚠️ INSERT 전이므로 데이터 없음
+    productRepository.findById(event.productId()); // Optional.empty()
+}
+
+@Async("eventExecutor")
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void handle(ProductCreatedEvent event) {
+    // ✅ 커밋 완료 후이므로 데이터 있음
+    productRepository.findById(event.productId()); // Optional[Product]
+}
+```
+
+| 항목 | @EventListener | @TransactionalEventListener(AFTER_COMMIT) |
 |------|---------------|------------------------------------------|
-| 실행 시점 | publishEvent() 즉시 | 트랜잭션 커밋 이후 |
+| 실행 시점 | publishEvent() 즉시 (INSERT 전) | 트랜잭션 커밋 후 (INSERT 후) |
 | 롤백 시 | 핸들러 이미 실행됨 | 핸들러 실행 안 함 |
-| 정합성 | 보장 어려움 | 보장됨 |
-| 용도 | 트랜잭션 무관한 작업 | DB 작업 이후 후속 처리 |
+| 핸들러에서 DB 조회 | 저장한 데이터 안 보임 | 저장한 데이터 보임 |
+| 정합성 보장 | 어려움 | 보장됨 |
+| 용도 | 트랜잭션과 무관한 즉시 작업 | DB 확정 후 후속 처리 |
+
+DB 데이터를 기반으로 하는 후속 처리(캐시 갱신, 알림, 외부 연동)는 반드시 `@TransactionalEventListener(AFTER_COMMIT)`을 사용해야 한다.
+
+### phase 옵션 4가지
+
+```java
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)    // 커밋 후 (가장 많이 사용)
+@TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)  // 롤백 후
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION) // 커밋/롤백 관계없이 완료 후
+@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)   // 커밋 직전
+```
+
+---
+
+## @Async 비동기 처리 설정
+
+### 왜 @Async가 필요한가?
+
+`@Async` 없이 `@TransactionalEventListener`만 사용하면 핸들러가 **요청 스레드에서 동기로** 실행된다.
+
+```
+[요청 스레드]
+    ├── create() 실행
+    ├── 커밋 완료
+    ├── handle() 실행  ← 요청 스레드가 여기서 블로킹됨
+    └── HTTP 응답 반환  ← handle()이 끝난 후에야 응답
+```
+
+핸들러가 느린 작업(외부 API, 이메일 발송 등)을 수행하면 응답 시간이 그만큼 늘어난다.
+
+`@Async`를 추가하면 핸들러가 **별도 스레드 풀**에서 실행되어, 요청 스레드는 즉시 응답을 반환한다.
+
+```
+[요청 스레드]                        [event- 스레드 풀]
+    ├── create() 실행
+    ├── 커밋 완료
+    └── HTTP 응답 반환  ──────────────→  handle() 비동기 실행
+                                              └── 느린 작업도 OK
+```
+
+### AsyncConfig 설정
+
+```java
+// config/AsyncConfig.java
+@EnableAsync       // Spring의 @Async 기능 활성화 (없으면 @Async가 동작하지 않음)
+@Configuration
+public class AsyncConfig {
+
+    @Bean(name = "eventExecutor")
+    public Executor eventExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("event-");
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+### ThreadPoolTaskExecutor 설정값 상세
+
+스레드 풀은 요청이 들어올 때 스레드를 어떻게 생성하고 관리할지를 결정한다.
+
+```
+[작업 요청] ──> [Core 스레드] ──(Core 꽉 참)──> [Queue] ──(Queue 꽉 참)──> [Max 스레드]
+                                                                                  │
+                                                                         (Max도 꽉 참) ──> 거부 정책
+```
+
+**setCorePoolSize(2)** - 항상 유지하는 기본 스레드 수
+
+```
+평소 이벤트가 적을 때: 스레드 2개만 유지
+요청이 없어도 이 2개는 대기 상태로 살아있음 → 빠른 응답 가능
+```
+
+**setMaxPoolSize(10)** - 순간 폭증 시 최대로 늘어날 수 있는 스레드 수
+
+```
+Queue가 꽉 찼을 때만 Core를 초과해서 스레드 생성
+초과 스레드는 작업이 없으면 일정 시간 후 자동 제거 (기본 60초)
+```
+
+**setQueueCapacity(100)** - Core 스레드가 모두 바쁠 때 작업을 대기시키는 큐 크기
+
+```
+Core(2개) 모두 바쁨 → 큐에 최대 100개 대기 가능
+큐가 100개 꽉 참 → 그때 Max까지 추가 스레드 생성
+```
+
+> 주의: Queue가 꽉 찬 후에 Max 스레드가 생성된다. 즉, Core → Queue → Max 순서다.
+> Queue를 크게 잡으면 Max 스레드가 거의 생성되지 않는다.
+
+**setThreadNamePrefix("event-")** - 생성되는 스레드 이름의 접두어
+
+```
+로그에서 어느 스레드가 실행했는지 식별 가능
+[event-1] ProductCreatedEvent: ...   ← event- 접두어로 이벤트 처리 스레드임을 바로 파악
+[http-nio-1] ...                     ← 요청 스레드와 구분
+```
+
+**전체 동작 시나리오**
+
+```
+상황 1. 동시 이벤트 2개 이하
+  → Core 스레드(event-1, event-2)가 처리
+
+상황 2. 동시 이벤트 3~102개
+  → Core 2개 처리 중, 나머지 100개는 Queue 대기
+
+상황 3. 동시 이벤트 103~112개
+  → Core 2개 + Queue 100개 꽉 참 → Max까지 추가 스레드(event-3 ~ event-10) 생성
+
+상황 4. 동시 이벤트 113개 이상
+  → 거부 정책 실행 (기본: CallerRunsPolicy → 요청 스레드가 직접 처리)
+```
+
+### @Async에 Executor 이름을 지정하는 이유
+
+```java
+@Async("eventExecutor")   // 특정 Executor 지정
+@Async                    // 지정 없으면 Spring 기본 Executor 사용
+```
+
+이름을 지정하지 않으면 Spring 기본 `SimpleAsyncTaskExecutor`가 사용되는데,
+이는 **요청마다 새 스레드를 생성**하고 재사용하지 않아 성능 문제가 발생할 수 있다.
+`ThreadPoolTaskExecutor`를 명시적으로 지정해서 스레드를 재사용하고 수를 제한한다.
+
+여러 용도별로 Executor를 분리하는 것도 가능하다.
+
+```java
+@Bean(name = "eventExecutor")
+public Executor eventExecutor() { ... }   // 이벤트 처리용
+
+@Bean(name = "batchExecutor")
+public Executor batchExecutor() { ... }  // 배치 처리용 (더 큰 풀)
+
+@Bean(name = "emailExecutor")
+public Executor emailExecutor() { ... }  // 이메일 발송용 (더 작은 풀)
+```
 
 ---
 
