@@ -1,9 +1,9 @@
 package eastmeet.backend5.product.presentation.controller;
 
-import eastmeet.backend5.product.application.command.usecase.ProductCommandUseCase;
-import eastmeet.backend5.product.application.query.usecase.ProductQueryUseCase;
-import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
-import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
+import eastmeet.backend5.product.application.usecase.ProductUseCase;
+import eastmeet.backend5.product.domain.model.Product;
+import eastmeet.backend5.product.presentation.dto.request.CreateProductRequest;
+import eastmeet.backend5.product.presentation.dto.request.UpdateProductRequest;
 import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
 import java.util.List;
 import java.util.UUID;
@@ -16,28 +16,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProductControllerImpl implements ProductController {
 
-    private final ProductCommandUseCase productCommandUseCase;
-    private final ProductQueryUseCase productQueryUseCase;
+    private final ProductUseCase productUseCase;
 
-    public ResponseEntity<ProductResponse> create(ProductCreateRequest req) {
-        ProductResponse response = productCommandUseCase.create(req);
+    public ResponseEntity<ProductResponse> create(CreateProductRequest req, UUID actorId) {
+        Product product = productUseCase.create(req, actorId);
+        ProductResponse response = ProductResponse.from(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     public ProductResponse getById(UUID productId) {
-        return productQueryUseCase.getById(productId);
+        return ProductResponse.from(productUseCase.getById(productId));
     }
 
     public List<ProductResponse> getAll() {
-        return productQueryUseCase.getAll();
+        return productUseCase.getAll().stream().map(ProductResponse::from).toList();
     }
 
-    public ProductResponse update(UUID productId, ProductUpdateRequest req) {
-        return productCommandUseCase.update(productId, req);
+    public ProductResponse update(UUID productId, UpdateProductRequest req, UUID actorId) {
+        Product updated = productUseCase.update(productId, req, actorId);
+        return ProductResponse.from(updated);
     }
 
     public ResponseEntity<Void> delete(UUID productId) {
-        productCommandUseCase.delete(productId);
+        productUseCase.delete(productId);
         return ResponseEntity.noContent().build();
     }
 

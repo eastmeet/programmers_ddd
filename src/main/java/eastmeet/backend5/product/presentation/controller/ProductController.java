@@ -1,13 +1,16 @@
 package eastmeet.backend5.product.presentation.controller;
 
-import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
-import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
+import eastmeet.backend5.product.presentation.dto.request.CreateProductRequest;
+import eastmeet.backend5.product.presentation.dto.request.UpdateProductRequest;
 import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "[DDD] PRODUCT", description = "제품 관리 API 입니다.")
@@ -28,10 +32,15 @@ public interface ProductController {
     @PostMapping
     @Operation(summary = "[제품 관리] 생성", description = "신규 제품을 생성합니다.")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "생성 성공"),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청")
+        @ApiResponse(responseCode = "201", description = "생성 성공",
+            content = @Content(schema = @Schema(implementation = ProductResponse.class))),
+        @ApiResponse(responseCode = "400", description = "요청 값 오류")
     })
-    ResponseEntity<ProductResponse> create(@RequestBody ProductCreateRequest request);
+    ResponseEntity<ProductResponse> create(
+        @RequestBody @Valid CreateProductRequest request,
+        @Parameter(description = "요청자 UUID")
+        @RequestHeader("X-Actor-Id") UUID actorId
+    );
 
     @GetMapping("/{productId}")
     @Operation(summary = "[제품 관리] 단건 조회", description = "제품 ID로 상품 정보를 조회합니다.")
@@ -55,7 +64,10 @@ public interface ProductController {
         @ApiResponse(responseCode = "400", description = "잘못된 요청"),
         @ApiResponse(responseCode = "404", description = "제품 없음")
     })
-    ProductResponse update(@PathVariable UUID productId, @RequestBody ProductUpdateRequest request);
+    ProductResponse update(
+        @PathVariable UUID productId,
+        @RequestBody @Valid UpdateProductRequest request,
+        @Parameter(description = "요청자 UUID") @RequestHeader("X-Actor-Id") UUID actorId);
 
     @DeleteMapping("/{productId}")
     @Operation(summary = "[제품 관리] 단건 삭제", description = "제품을 삭제합니다.")

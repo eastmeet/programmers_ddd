@@ -1,15 +1,17 @@
-package eastmeet.backend5.product.domain.repository.command;
+package eastmeet.backend5.product.domain.repository;
 
 import eastmeet.backend5.product.domain.model.Product;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ProductCommandRepository {
+public interface ProductRepository {
 
     Product save(Product product);
 
     Optional<Product> findById(UUID productId);
 
-    void delete(Product product);
+    List<Product> findAll();
 
+    void delete(Product product);
 }
