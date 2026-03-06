@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eastmeet.backend5.common.exception.GlobalExceptionHandler;
 import eastmeet.backend5.product.application.exception.ProductNotFoundException;
+import eastmeet.backend5.product.application.exception.SellerNotFoundException;
 import eastmeet.backend5.product.application.usecase.ProductUseCase;
 import eastmeet.backend5.product.domain.model.Product;
 import eastmeet.backend5.product.presentation.controller.ProductControllerImpl;
@@ -156,5 +157,29 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message", containsString(productId.toString())))
                 .andExpect(jsonPath("$.path").value("/api/v1/products/" + productId));
+    }
+
+    @Test
+    void createReturnsNotFoundWhenSellerDoesNotExist() throws Exception {
+        UUID actorId = UUID.randomUUID();
+        UUID sellerId = UUID.randomUUID();
+        CreateProductRequest request = new CreateProductRequest(
+            sellerId,
+            "Macbook Pro 14",
+            "M3 chip",
+            new BigDecimal("2590000.00"),
+            10,
+            "ACTIVE"
+        );
+        when(productUseCase.create(any(CreateProductRequest.class), any(UUID.class)))
+            .thenThrow(new SellerNotFoundException(sellerId));
+
+        mockMvc.perform(post("/api/v1/products")
+                .header("X-Actor-Id", actorId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.message", containsString(sellerId.toString())));
     }
 }

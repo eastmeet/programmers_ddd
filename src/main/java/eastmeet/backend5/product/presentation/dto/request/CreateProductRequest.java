@@ -9,8 +9,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
+import lombok.Builder;
 
 @Schema(description = "[제품 관리] 등록 요청 메시지")
+@Builder
 public record CreateProductRequest(
     @NotNull
     @Schema(description = "판매자 ID", example = "550e8400-e29b-41d4-a716-446655440000")

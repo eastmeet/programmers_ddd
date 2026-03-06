@@ -1,6 +1,8 @@
 package eastmeet.backend5.common.exception;
 
+import eastmeet.backend5.product.application.exception.InactiveSellerException;
 import eastmeet.backend5.product.application.exception.ProductNotFoundException;
+import eastmeet.backend5.product.application.exception.SellerNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleProductNotFound(ProductNotFoundException ex,
         HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(SellerNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSellerNotFound(SellerNotFoundException ex,
+        HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InactiveSellerException.class)
+    public ResponseEntity<ErrorResponse> handleInactiveSeller(InactiveSellerException ex,
+        HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
