@@ -9,9 +9,13 @@ import eastmeet.backend5.member.presentation.dto.req.MemberJoinReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberUpdateReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberAdmRes;
 import eastmeet.backend5.member.presentation.dto.res.MemberRes;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +32,22 @@ public class MemberApplicationService implements MemberUseCase {
         checkEmailDuplicate(req.email());
         checkPhoneDuplicate(req.phone());
 
+        SecureRandom random = new SecureRandom();
+        byte[] generateSeed = random.generateSeed(8);
+        String saltKey = Base64.getEncoder().encodeToString(generateSeed);
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encodedPassword = passwordEncoder.encode(req.password() + saltKey);
+
         Member member = Member.create(
             req.email(),
             req.name(),
-            req.password(),
+            encodedPassword,
             req.phone(),
-            req.address()
+            req.address(),
+            saltKey
         );
+
         memberRepository.save(member);
     }
 

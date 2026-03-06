@@ -36,7 +36,7 @@ public class Member {
     @Column(nullable = false, length = 100, comment = "주소")
     private String address;
 
-    @Column(name = "\"status\"", length = 5, comment = "유저 상태")
+    @Column(name = "\"status\"", length = 15, comment = "유저 상태")
     @Enumerated(value = EnumType.STRING)
     private MemberStatus status;
 
@@ -80,8 +80,8 @@ public class Member {
         this.flag = flag;
     }
 
-    public static Member create(String email, String name, String password, String phone, String address) {
-        return new Member(email, name, password, phone, address, MemberStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now(), null, null);
+    public static Member create(String email, String name, String password, String phone, String address, String saltKey) {
+        return new Member(email, name, password, phone, address, MemberStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now(), saltKey, null);
     }
 
     public void update(String name, String password, String phone, String address) {
