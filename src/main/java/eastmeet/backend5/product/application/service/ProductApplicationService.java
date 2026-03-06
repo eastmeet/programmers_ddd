@@ -1,9 +1,11 @@
-package eastmeet.backend5.product.service;
+package eastmeet.backend5.product.application.service;
 
-import eastmeet.backend5.product.domain.Product;
-import eastmeet.backend5.product.dto.ProductCreateRequest;
-import eastmeet.backend5.product.dto.ProductUpdateRequest;
-import eastmeet.backend5.product.repository.ProductRepository;
+import eastmeet.backend5.product.application.usecase.ProductUseCase;
+import eastmeet.backend5.product.domain.repository.ProductRepository;
+import eastmeet.backend5.product.domain.model.Product;
+import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
+import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
+import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService {
+public class ProductApplicationService implements ProductUseCase {
 
     private final ProductRepository productRepository;
 
     @Override
     @Transactional
-    public Product create(ProductCreateRequest req) {
+    public ProductResponse create(ProductCreateRequest req) {
         Product product = Product.create(
             toUuid(req.sellerId(), "sellerId"),
             req.name(),
@@ -33,23 +35,25 @@ public class ProductServiceImpl implements ProductService {
             req.status(),
             toUuid(req.creatorId(), "creatorId")
         );
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        return ProductResponse.from(savedProduct);
     }
 
     @Override
-    public Product getById(UUID productId) {
+    public ProductResponse getById(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        return product;
+        return ProductResponse.from(product);
     }
 
     @Override
-    public List<Product> getAll() {
-        return productRepository.findAll();
+    public List<ProductResponse> getAll() {
+        List<Product> productList = productRepository.findAll();
+        return productList.stream().map(ProductResponse::from).toList();
     }
 
     @Override
     @Transactional
-    public Product update(UUID productId, ProductUpdateRequest req) {
+    public ProductResponse update(UUID productId, ProductUpdateRequest req) {
         Product product = findByIdOrThrow(productId);
         product.update(
             req.name(),
@@ -59,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
             req.status(),
             toUuid(req.modifierId(), "modifierId")
         );
-        return product;
+        return ProductResponse.from(product);
     }
 
     @Override

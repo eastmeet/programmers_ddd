@@ -1,4 +1,4 @@
-package eastmeet.backend5.product.domain;
+package eastmeet.backend5.product.domain.model;
 
 
 import jakarta.persistence.Column;
