@@ -1,8 +1,8 @@
-package eastmeet.backend5.product.infrastructure.persistence;
+package eastmeet.backend5.product.infrastructure.persistence.command;
 
 import eastmeet.backend5.product.domain.model.Product;
-import eastmeet.backend5.product.domain.repository.ProductRepository;
-import java.util.List;
+import eastmeet.backend5.product.domain.repository.command.ProductCommandRepository;
+import eastmeet.backend5.product.infrastructure.persistence.ProductJpaRepository;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class ProductRepositoryAdapter implements ProductRepository {
+public class ProductCommandRepositoryAdapter implements ProductCommandRepository {
 
     private final ProductJpaRepository productJpaRepository;
 
@@ -22,11 +22,6 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public Optional<Product> findById(UUID productId) {
         return productJpaRepository.findById(productId);
-    }
-
-    @Override
-    public List<Product> findAll() {
-        return productJpaRepository.findAll();
     }
 
     @Override

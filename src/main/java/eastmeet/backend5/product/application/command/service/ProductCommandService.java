@@ -1,12 +1,11 @@
-package eastmeet.backend5.product.application.service;
+package eastmeet.backend5.product.application.command.service;
 
-import eastmeet.backend5.product.application.usecase.ProductUseCase;
-import eastmeet.backend5.product.domain.repository.ProductRepository;
+import eastmeet.backend5.product.application.command.usecase.ProductCommandUseCase;
 import eastmeet.backend5.product.domain.model.Product;
+import eastmeet.backend5.product.domain.repository.command.ProductCommandRepository;
 import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
 import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
 import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ProductApplicationService implements ProductUseCase {
+public class ProductCommandService implements ProductCommandUseCase {
 
-    private final ProductRepository productRepository;
+    private final ProductCommandRepository productCommandRepository;
 
     @Override
     @Transactional
@@ -35,20 +34,8 @@ public class ProductApplicationService implements ProductUseCase {
             req.status(),
             toUuid(req.creatorId(), "creatorId")
         );
-        Product savedProduct = productRepository.save(product);
+        Product savedProduct = productCommandRepository.save(product);
         return ProductResponse.from(savedProduct);
-    }
-
-    @Override
-    public ProductResponse getById(UUID productId) {
-        Product product = findByIdOrThrow(productId);
-        return ProductResponse.from(product);
-    }
-
-    @Override
-    public List<ProductResponse> getAll() {
-        List<Product> productList = productRepository.findAll();
-        return productList.stream().map(ProductResponse::from).toList();
     }
 
     @Override
@@ -70,11 +57,11 @@ public class ProductApplicationService implements ProductUseCase {
     @Transactional
     public void delete(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        productRepository.delete(product);
+        productCommandRepository.delete(product);
     }
 
     private Product findByIdOrThrow(UUID productId) {
-        return productRepository.findById(productId)
+        return productCommandRepository.findById(productId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
     }
 
