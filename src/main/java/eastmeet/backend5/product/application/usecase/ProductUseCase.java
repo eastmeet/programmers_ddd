@@ -1,21 +1,21 @@
 package eastmeet.backend5.product.application.usecase;
 
-import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
-import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
-import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
+
+import eastmeet.backend5.product.domain.model.Product;
+import eastmeet.backend5.product.presentation.dto.request.CreateProductRequest;
+import eastmeet.backend5.product.presentation.dto.request.UpdateProductRequest;
 import java.util.List;
 import java.util.UUID;
 
 public interface ProductUseCase {
 
-    ProductResponse create(ProductCreateRequest req);
+    Product create(CreateProductRequest request, UUID actorId);
 
-    ProductResponse getById(UUID productId);
+    Product getById(UUID productId);
 
-    List<ProductResponse> getAll();
+    List<Product> getAll();
 
-    ProductResponse update(UUID productId, ProductUpdateRequest req);
+    Product update(UUID productId, UpdateProductRequest request, UUID actorId);
 
     void delete(UUID productId);
-
 }

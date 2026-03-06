@@ -1,69 +1,75 @@
 package eastmeet.backend5.product.application.service;
 
+import eastmeet.backend5.product.application.event.ProductCreatedEvent;
+import eastmeet.backend5.product.application.event.ProductDeletedEvent;
+import eastmeet.backend5.product.application.event.ProductUpdatedEvent;
+import eastmeet.backend5.product.application.exception.ProductNotFoundException;
 import eastmeet.backend5.product.application.usecase.ProductUseCase;
-import eastmeet.backend5.product.domain.repository.ProductRepository;
 import eastmeet.backend5.product.domain.model.Product;
-import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
-import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
-import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
+import eastmeet.backend5.product.domain.repository.ProductRepository;
+import eastmeet.backend5.product.presentation.dto.request.CreateProductRequest;
+import eastmeet.backend5.product.presentation.dto.request.UpdateProductRequest;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-@Slf4j
+
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 public class ProductApplicationService implements ProductUseCase {
 
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    public ProductApplicationService(ProductRepository productRepository,
+        ApplicationEventPublisher applicationEventPublisher) {
+        this.productRepository = productRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
 
     @Override
     @Transactional
-    public ProductResponse create(ProductCreateRequest req) {
+    public Product create(CreateProductRequest request, UUID actorId) {
         Product product = Product.create(
-            toUuid(req.sellerId(), "sellerId"),
-            req.name(),
-            req.description(),
-            req.price(),
-            req.stock(),
-            req.status(),
-            toUuid(req.creatorId(), "creatorId")
+            request.sellerId(),
+            request.name(),
+            request.description(),
+            request.price(),
+            request.stock(),
+            request.status(),
+            actorId
         );
-        Product savedProduct = productRepository.save(product);
-        return ProductResponse.from(savedProduct);
+        Product saved = productRepository.save(product);
+        applicationEventPublisher.publishEvent(new ProductCreatedEvent(saved.getId(), actorId));
+        return saved;
     }
 
     @Override
-    public ProductResponse getById(UUID productId) {
-        Product product = findByIdOrThrow(productId);
-        return ProductResponse.from(product);
+    public Product getById(UUID productId) {
+        return findByIdOrThrow(productId);
     }
 
     @Override
-    public List<ProductResponse> getAll() {
-        List<Product> productList = productRepository.findAll();
-        return productList.stream().map(ProductResponse::from).toList();
+    public List<Product> getAll() {
+        return productRepository.findAll();
     }
 
     @Override
     @Transactional
-    public ProductResponse update(UUID productId, ProductUpdateRequest req) {
+    public Product update(UUID productId, UpdateProductRequest request, UUID actorId) {
         Product product = findByIdOrThrow(productId);
         product.update(
-            req.name(),
-            req.description(),
-            req.price(),
-            req.stock(),
-            req.status(),
-            toUuid(req.modifierId(), "modifierId")
+            request.name(),
+            request.description(),
+            request.price(),
+            request.stock(),
+            request.status(),
+            actorId
         );
-        return ProductResponse.from(product);
+        applicationEventPublisher.publishEvent(new ProductUpdatedEvent(product.getId(), actorId));
+        return product;
     }
 
     @Override
@@ -71,19 +77,11 @@ public class ProductApplicationService implements ProductUseCase {
     public void delete(UUID productId) {
         Product product = findByIdOrThrow(productId);
         productRepository.delete(product);
+        applicationEventPublisher.publishEvent(new ProductDeletedEvent(productId, product.getModifyId()));
     }
 
     private Product findByIdOrThrow(UUID productId) {
         return productRepository.findById(productId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
-    }
-
-    private UUID toUuid(String value, String fieldName) {
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            log.error("{} must be valid UUID: {}", fieldName, value, e);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " must be valid UUID");
-        }
+            .orElseThrow(() -> new ProductNotFoundException(productId));
     }
 }

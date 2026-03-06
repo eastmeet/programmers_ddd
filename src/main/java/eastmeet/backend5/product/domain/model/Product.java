@@ -130,4 +130,23 @@ public class Product {
             modifyId = id;
         }
     }
+
+    public void updateRegDt(LocalDateTime localDateTime) {
+        if (localDateTime != null) {
+            this.regDt = localDateTime;
+        }
+    }
+
+    public void updateModifyDt(LocalDateTime localDateTime) {
+        if (localDateTime != null) {
+            this.modifyDt = localDateTime;
+        }
+    }
+
+    public void initId(UUID id) {
+        if (id != null) {
+            this.id = id;
+        }
+    }
+
 }
