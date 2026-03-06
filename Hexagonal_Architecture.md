@@ -151,7 +151,7 @@ product/domain/Product.java
 
 **Inbound Port** - 외부(Controller)가 내부(Service)를 호출하기 위한 인터페이스
 ```java
-// product/application/port/in/ProductUseCase.java
+// product/application/port/request/ProductUseCase.java
 public interface ProductUseCase {
     ProductResponse create(ProductCreateRequest req);
     ProductResponse getById(UUID productId);
@@ -163,7 +163,7 @@ public interface ProductUseCase {
 
 **Outbound Port** - 내부(Service)가 외부(DB)에게 요청하기 위한 인터페이스
 ```java
-// product/application/port/out/ProductPersistencePort.java
+// product/application/port/response/ProductPersistencePort.java
 public interface ProductPersistencePort {
     Product save(Product product);
     Optional<Product> findById(UUID productId);
@@ -201,7 +201,7 @@ Port를 실제로 구현해서 외부 세계와 연결하는 변환기. 두 종�
 
 **Inbound Adapter** - HTTP 요청을 받아 UseCase(Inbound Port)를 호출
 ```java
-// product/adapter/in/web/ProductControllerImpl.java
+// product/adapter/request/web/ProductControllerImpl.java
 @RestController
 public class ProductControllerImpl implements ProductController {
 
@@ -216,7 +216,7 @@ public class ProductControllerImpl implements ProductController {
 
 **Outbound Adapter** - Outbound Port를 실제 JPA로 구현
 ```java
-// product/adapter/out/persistence/ProductPersistenceAdapter.java
+// product/adapter/response/persistence/ProductPersistenceAdapter.java
 @Repository
 public class ProductPersistenceAdapter implements ProductPersistencePort {  // Outbound Port 구현
 

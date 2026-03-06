@@ -1,4 +1,4 @@
-package eastmeet.backend5.product.dto.in;
+package eastmeet.backend5.product.presentation.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;

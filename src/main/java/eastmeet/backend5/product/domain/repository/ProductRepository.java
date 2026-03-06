@@ -1,11 +1,11 @@
-package eastmeet.backend5.product.application.port.out;
+package eastmeet.backend5.product.domain.repository;
 
-import eastmeet.backend5.product.domain.Product;
+import eastmeet.backend5.product.domain.model.Product;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ProductPersistencePort {
+public interface ProductRepository {
 
     Product save(Product product);
 

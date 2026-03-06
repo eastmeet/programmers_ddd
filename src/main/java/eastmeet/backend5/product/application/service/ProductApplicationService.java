@@ -1,11 +1,11 @@
 package eastmeet.backend5.product.application.service;
 
-import eastmeet.backend5.product.application.port.in.ProductUseCase;
-import eastmeet.backend5.product.application.port.out.ProductPersistencePort;
-import eastmeet.backend5.product.domain.Product;
-import eastmeet.backend5.product.dto.in.ProductCreateRequest;
-import eastmeet.backend5.product.dto.in.ProductUpdateRequest;
-import eastmeet.backend5.product.dto.out.ProductResponse;
+import eastmeet.backend5.product.application.usecase.ProductUseCase;
+import eastmeet.backend5.product.domain.repository.ProductRepository;
+import eastmeet.backend5.product.domain.model.Product;
+import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
+import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
+import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class ProductService implements ProductUseCase {
+public class ProductApplicationService implements ProductUseCase {
 
-    private final ProductPersistencePort productPersistencePort;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -35,20 +35,20 @@ public class ProductService implements ProductUseCase {
             req.status(),
             toUuid(req.creatorId(), "creatorId")
         );
-        Product savedProduct = productPersistencePort.save(product);
-        return ProductResponse.of(savedProduct);
+        Product savedProduct = productRepository.save(product);
+        return ProductResponse.from(savedProduct);
     }
 
     @Override
     public ProductResponse getById(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        return ProductResponse.of(product);
+        return ProductResponse.from(product);
     }
 
     @Override
     public List<ProductResponse> getAll() {
-        List<Product> productList = productPersistencePort.findAll();
-        return productList.stream().map(ProductResponse::of).toList();
+        List<Product> productList = productRepository.findAll();
+        return productList.stream().map(ProductResponse::from).toList();
     }
 
     @Override
@@ -63,18 +63,18 @@ public class ProductService implements ProductUseCase {
             req.status(),
             toUuid(req.modifierId(), "modifierId")
         );
-        return ProductResponse.of(product);
+        return ProductResponse.from(product);
     }
 
     @Override
     @Transactional
     public void delete(UUID productId) {
         Product product = findByIdOrThrow(productId);
-        productPersistencePort.delete(product);
+        productRepository.delete(product);
     }
 
     private Product findByIdOrThrow(UUID productId) {
-        return productPersistencePort.findById(productId)
+        return productRepository.findById(productId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
     }
 

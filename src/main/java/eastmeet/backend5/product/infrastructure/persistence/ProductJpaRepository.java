@@ -1,6 +1,6 @@
-package eastmeet.backend5.product.adapter.out.persistence;
+package eastmeet.backend5.product.infrastructure.persistence;
 
-import eastmeet.backend5.product.domain.Product;
+import eastmeet.backend5.product.domain.model.Product;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 

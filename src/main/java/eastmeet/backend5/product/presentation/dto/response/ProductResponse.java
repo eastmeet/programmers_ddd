@@ -1,6 +1,6 @@
-package eastmeet.backend5.product.dto.out;
+package eastmeet.backend5.product.presentation.dto.response;
 
-import eastmeet.backend5.product.domain.Product;
+import eastmeet.backend5.product.domain.model.Product;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,7 +16,7 @@ public record ProductResponse(
     LocalDateTime modifyDt
 ) {
 
-    public static ProductResponse of(Product product) {
+    public static ProductResponse from(Product product) {
         return new ProductResponse(
             product.getId(),
             product.getSellerId(),

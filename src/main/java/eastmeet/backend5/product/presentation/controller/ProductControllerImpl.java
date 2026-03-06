@@ -1,10 +1,9 @@
-package eastmeet.backend5.product.adapter.in.web;
+package eastmeet.backend5.product.presentation.controller;
 
-import eastmeet.backend5.product.domain.Product;
-import eastmeet.backend5.product.dto.in.ProductCreateRequest;
-import eastmeet.backend5.product.dto.in.ProductUpdateRequest;
-import eastmeet.backend5.product.application.port.in.ProductUseCase;
-import eastmeet.backend5.product.dto.out.ProductResponse;
+import eastmeet.backend5.product.presentation.dto.request.ProductCreateRequest;
+import eastmeet.backend5.product.presentation.dto.request.ProductUpdateRequest;
+import eastmeet.backend5.product.application.usecase.ProductUseCase;
+import eastmeet.backend5.product.presentation.dto.response.ProductResponse;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
