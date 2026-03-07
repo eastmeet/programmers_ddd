@@ -5,6 +5,7 @@ import eastmeet.backend5.member.application.exception.MemberNotFoundException;
 import eastmeet.backend5.member.application.usecase.MemberUseCase;
 import eastmeet.backend5.member.domain.model.Member;
 import eastmeet.backend5.member.domain.repository.MemberRepository;
+import eastmeet.backend5.member.presentation.dto.req.MemberLoginReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberJoinReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberUpdateReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberAdmRes;
@@ -26,6 +27,8 @@ public class MemberApplicationService implements MemberUseCase {
 
     private final MemberRepository memberRepository;
 
+    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
+
     @Override
     @Transactional
     public void join(MemberJoinReq req) {
@@ -36,8 +39,7 @@ public class MemberApplicationService implements MemberUseCase {
         byte[] generateSeed = random.generateSeed(8);
         String saltKey = Base64.getEncoder().encodeToString(generateSeed);
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String encodedPassword = passwordEncoder.encode(req.password() + saltKey);
+        String encodedPassword = ENCODER.encode(req.password() + saltKey);
 
         Member member = Member.create(
             req.email(),
@@ -49,6 +51,14 @@ public class MemberApplicationService implements MemberUseCase {
         );
 
         memberRepository.save(member);
+    }
+
+    @Override
+    public Boolean login(MemberLoginReq req) {
+        Member member = getMemberByEmail(req.email());
+        String rawPassword = req.password();
+        String encodedPassword = member.getPassword();
+        return ENCODER.matches(rawPassword + member.getSaltKey(), encodedPassword);
     }
 
     @Override
@@ -80,7 +90,11 @@ public class MemberApplicationService implements MemberUseCase {
     }
 
     private Member getMemberById(UUID id) {
-        return memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(id));
+        return memberRepository.findById(id).orElseThrow(() -> new MemberNotFoundException(id.toString()));
+    }
+
+    private Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() -> new MemberNotFoundException(email));
     }
 
     private void checkEmailDuplicate(String email) {

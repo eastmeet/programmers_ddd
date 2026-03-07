@@ -2,6 +2,7 @@ package eastmeet.backend5.member.presentation.controller;
 
 import eastmeet.backend5.member.application.usecase.MemberUseCase;
 import eastmeet.backend5.member.presentation.dto.req.MemberJoinReq;
+import eastmeet.backend5.member.presentation.dto.req.MemberLoginReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberUpdateReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberAdmRes;
 import eastmeet.backend5.member.presentation.dto.res.MemberRes;
@@ -20,6 +21,12 @@ public class MemberControllerImpl implements MemberController {
     public ResponseEntity<Void> join(MemberJoinReq req) {
         memberUseCase.join(req);
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    public ResponseEntity<Boolean> login(MemberLoginReq req) {
+        Boolean result = memberUseCase.login(req);
+        return ResponseEntity.ok().body(result);
     }
 
     public ResponseEntity<List<MemberRes>> getAll() {

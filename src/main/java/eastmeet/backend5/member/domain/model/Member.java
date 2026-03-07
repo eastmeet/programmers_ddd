@@ -52,7 +52,7 @@ public class Member {
     @Column(name = "modify_dt", nullable = false)
     private LocalDateTime modifyDt;
 
-    @Column(name = "saltkey", nullable = false, length = 14)
+    @Column(name = "saltkey", nullable = false, length = 25)
     private String saltKey;
 
     @Column(name = "flag", length = 5)

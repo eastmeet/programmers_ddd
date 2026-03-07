@@ -16,5 +16,7 @@ public interface MemberRepository {
     boolean existByEmail(String email);
 
     boolean existByPhone(String phone);
+
+    Optional<Member> findByEmail(String email);
 }
 

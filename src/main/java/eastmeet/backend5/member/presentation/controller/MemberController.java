@@ -1,6 +1,7 @@
 package eastmeet.backend5.member.presentation.controller;
 
 import eastmeet.backend5.member.presentation.dto.req.MemberJoinReq;
+import eastmeet.backend5.member.presentation.dto.req.MemberLoginReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberUpdateReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberAdmRes;
 import eastmeet.backend5.member.presentation.dto.res.MemberRes;
@@ -18,11 +19,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "Member", description = "사용자 CRUD API")
-@RequestMapping("/api/v1/members")
+@RequestMapping("/auth/v1/members")
 public interface MemberController {
 
     @PostMapping
     ResponseEntity<Void> join(@RequestBody @Valid MemberJoinReq req);
+
+    @PostMapping("/login")
+    ResponseEntity<Boolean> login(@RequestBody @Valid MemberLoginReq req);
 
     @GetMapping
     ResponseEntity<List<MemberRes>> getAll();
