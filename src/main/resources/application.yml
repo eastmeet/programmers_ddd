@@ -4,6 +4,9 @@ server:
 spring:
   config:
     import: optional:file:.env[.properties]
+  batch:
+    job:
+      enabled: false
   application:
     name: backend5
   datasource:
@@ -21,7 +24,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
-
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:org/springframework/batch/core/schema-postgresql.sql
+      continue-on-error: true
 springdoc:
   api-docs:
     enabled: true
