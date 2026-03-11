@@ -1,6 +1,7 @@
 package eastmeet.backend5.config;
 
 import eastmeet.backend5.filter.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,10 @@ public class SecurityConfig {
                     .requestMatchers("/actuator/**").permitAll()
                     .requestMatchers("/api/v1/**").authenticated()
                     .anyRequest().denyAll()
+            ).exceptionHandling(ex ->
+                ex.authenticationEntryPoint((req, res, e) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증이 필요합니다.")
+                )
             );
 
         return httpSecurity.build();
@@ -58,7 +63,8 @@ public class SecurityConfig {
             CorsConfiguration corsConfigurer = new CorsConfiguration();
             corsConfigurer.setAllowedOriginPatterns(List.of("*"));
             corsConfigurer.setAllowedMethods(
-                Arrays.asList(HttpMethod.POST.name(), HttpMethod.GET.name(), HttpMethod.PUT.name(), HttpMethod.DELETE.name(), HttpMethod.PATCH.name()));
+                Arrays.asList(HttpMethod.POST.name(), HttpMethod.GET.name(), HttpMethod.PUT.name(), HttpMethod.DELETE.name(),
+                    HttpMethod.PATCH.name()));
             corsConfigurer.addAllowedHeader("*");
             corsConfigurer.setAllowCredentials(true);
             corsConfigurer.setMaxAge(3600L);

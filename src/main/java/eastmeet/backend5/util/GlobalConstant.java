@@ -12,4 +12,6 @@ public class GlobalConstant {
 
     public static final String RSA_ALGORITHM = "RSA";
 
+    public static final String BEARER_TOKEN_PREFIX = "Bearer ";
+
 }

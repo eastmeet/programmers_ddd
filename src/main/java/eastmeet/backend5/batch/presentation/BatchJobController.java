@@ -13,17 +13,19 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "배치 API")
+@RequestMapping("/api/v1/settlement")
 public class BatchJobController {
 
     private final SettlementJobLauncher settlementJobLauncher;
 
-    @PostMapping("/settlement")
+    @PostMapping
     @Operation(summary = "정산 배치 실행", description = "settlementDate 기준으로 settlementJob을 실행합니다.")
     public ResponseEntity<Map<String, Object>> runSettlementJob(
         @Parameter(description = "정산일(yyyy-MM-dd), 미입력 시 오늘")
@@ -37,7 +39,7 @@ public class BatchJobController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(toResponse(execution, targetDate));
     }
 
-    @PostMapping("/settlement-chunk")
+    @PostMapping("/chunk")
     @Operation(summary = "정산 청크 배치 실행", description = "settlementDate 기준으로 settlementChunkJob을 실행합니다.")
     public ResponseEntity<Map<String, Object>> runSettlementChunkJob(
         @Parameter(description = "정산일(yyyy-MM-dd), 미입력 시 오늘")
