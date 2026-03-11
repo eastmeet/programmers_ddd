@@ -5,6 +5,7 @@ import eastmeet.backend5.member.presentation.dto.req.MemberLoginReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberUpdateReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberAdmRes;
 import eastmeet.backend5.member.presentation.dto.res.MemberRes;
+import eastmeet.backend5.member.presentation.dto.res.MemberTokenRes;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,7 +13,7 @@ public interface MemberUseCase {
 
     void join(MemberJoinReq req);
 
-    Boolean login(MemberLoginReq req);
+    MemberTokenRes login(MemberLoginReq req);
 
     List<MemberRes> findAll();
 

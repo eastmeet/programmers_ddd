@@ -2,13 +2,13 @@ server:
   port: ${APP_PORT:8080}
 
 spring:
+  application:
+    name: ${APP_NAME:backend5}
   config:
     import: optional:file:.env[.properties]
   batch:
     job:
       enabled: false
-  application:
-    name: backend5
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     username: ${DB_USERNAME:postgres}
@@ -36,7 +36,16 @@ springdoc:
     enabled: true
     tags-sorter: alpha
     doc-expansion: none
+    path: /swagger-ui.html
   default-consumes-media-type: application/json;charset=UTF-8
   default-produces-media-type: application/json;charset=UTF-8
   cache:
     disabled: true
+
+jwt:
+  expiration:
+    access: 3600000 # 1시간 (1000 * 60 * 60)
+    refresh: 604800000 # 7일 (86400000 * 7)
+  key:
+    public: ${JWT_PUBLIC_KEY}
+    private: ${JWT_PRIVATE_KEY}
