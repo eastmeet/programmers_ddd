@@ -13,6 +13,9 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
+ext {
+    springCloudVersion = "2025.1.0"
+}
 
 repositories {
     mavenCentral()
@@ -45,11 +48,23 @@ dependencies {
     // batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
+    //MSA
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'//discovery에 살아있는지 여부에 대한 서버 정보 전달.
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'//eureka 연결 라이브러리
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'//config 정보 연결.
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'//bootstrap.yaml을 읽어와서 먼저 적용하기 위한 라이브러리
+
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.batch:spring-batch-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
+    }
 }
 
 tasks.named('test') {

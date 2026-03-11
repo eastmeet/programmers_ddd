@@ -7,10 +7,12 @@ import eastmeet.backend5.member.presentation.dto.req.MemberJoinReq;
 import eastmeet.backend5.member.presentation.dto.req.MemberLoginReq;
 import eastmeet.backend5.member.presentation.dto.res.MemberTokenRes;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class MemberAuthControllerImpl implements MemberAuthController {
@@ -34,6 +36,12 @@ public class MemberAuthControllerImpl implements MemberAuthController {
         return ResponseEntity.ok()
             .headers(headers)
             .body(result.isLogin());
+    }
+
+    @Override
+    public Boolean check(String httpMethod, String requestPath) {
+        log.info("httpMethod={}, requestPath={}", httpMethod, requestPath);
+        return true;
     }
 
 }

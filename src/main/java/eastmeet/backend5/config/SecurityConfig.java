@@ -67,6 +67,7 @@ public class SecurityConfig {
                     HttpMethod.PATCH.name()));
             corsConfigurer.addAllowedHeader("*");
             corsConfigurer.setAllowCredentials(true);
+            corsConfigurer.setExposedHeaders(List.of("Authorization"));
             corsConfigurer.setMaxAge(3600L);
 
             UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
